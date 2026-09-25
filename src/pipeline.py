@@ -49,9 +49,12 @@ class SmartScannerPipeline:
 
         corrected = self.corrector.transform(image, corners)
         enhanced = self.enhancer.enhance(corrected)
-        raw_text, confidence = self.ocr.extract_text(enhanced)
-        fields = self.parser.parse(raw_text)
         
+        # Menggunakan citra grayscale dari hasil pelurusan perspektif untuk OCR yang lebih jernih
+        gray_corrected = cv2.cvtColor(corrected, cv2.COLOR_BGR2GRAY) if len(corrected.shape) == 3 else corrected
+        raw_text, confidence = self.ocr.extract_text(gray_corrected)
+        
+        fields = self.parser.parse(raw_text)
         proc_time = int((time.time() - start_time) * 1000)
         
         metadata = {

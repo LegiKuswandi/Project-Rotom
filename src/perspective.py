@@ -38,5 +38,11 @@ class PerspectiveCorrector:
         
         if max_height > max_width * 1.2:
             warped = cv2.rotate(warped, cv2.ROTATE_90_CLOCKWISE)
+
+        h, w = warped.shape[:2]
+        margin_y = int(h * 0.02)
+        margin_x = int(w * 0.02)
+        if h > 2 * margin_y and w > 2 * margin_x:
+            warped = warped[margin_y:h-margin_y, margin_x:w-margin_x]
             
         return warped
