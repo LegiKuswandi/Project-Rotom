@@ -1,11 +1,31 @@
 import re
 
 class BusinessCardParser:
-    def clean_field(self, text: str) -> str:
+    def clean_name(self, text: str) -> str:
         if not text:
             return "N/A"
-        cleaned = re.sub(r'^[|!\s]+|[|!\s]+$', '', text)
-        cleaned = cleaned.replace('|', '').strip()
+        cleaned = re.sub(r'[^a-zA-Z\s]', '', text)
+        cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+        return cleaned if cleaned else "N/A"
+
+    def clean_company(self, text: str) -> str:
+        if not text:
+            return "N/A"
+        cleaned = re.sub(r'[^a-zA-Z0-9\s.]', '', text)
+        cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+        return cleaned if cleaned else "N/A"
+
+    def clean_email(self, text: str) -> str:
+        if not text:
+            return "N/A"
+        cleaned = re.sub(r'[^a-zA-Z0-9@.]', '', text)
+        return cleaned if cleaned else "N/A"
+
+    def clean_phone(self, text: str) -> str:
+        if not text:
+            return "N/A"
+        cleaned = re.sub(r'[^0-9+\s]', '', text)
+        cleaned = re.sub(r'\s+', ' ', cleaned).strip()
         return cleaned if cleaned else "N/A"
 
     def parse(self, raw_text: str) -> dict:
@@ -42,8 +62,8 @@ class BusinessCardParser:
             company = non_contact_lines[1]
             
         return {
-            "name": self.clean_field(name),
-            "company": self.clean_field(company),
-            "email": self.clean_field(email),
-            "phone": self.clean_field(phone)
+            "name": self.clean_name(name),
+            "company": self.clean_company(company),
+            "email": self.clean_email(email),
+            "phone": self.clean_phone(phone)
         }
