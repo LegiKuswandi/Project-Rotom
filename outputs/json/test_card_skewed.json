@@ -1,0 +1,14 @@
+{
+  "document_detected": true,
+  "rotation_angle": 0.0,
+  "processing_time_ms": 426,
+  "ocr_confidence": 0.93,
+  "image_width": 1920,
+  "image_height": 1080,
+  "fields": {
+    "name": "BUD! SANTOSO |",
+    "company": "PT Nusantara Tech |",
+    "email": "budi@nusantara.co.id",
+    "phone": "|| +62 812 3456 7890 |"
+  }
+}
