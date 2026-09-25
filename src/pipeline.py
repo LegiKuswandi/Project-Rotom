@@ -50,16 +50,32 @@ class SmartScannerPipeline:
         corrected = self.corrector.transform(image, corners)
         enhanced = self.enhancer.enhance(corrected)
         
-        # Menggunakan citra grayscale dari hasil pelurusan perspektif untuk OCR yang lebih jernih
         gray_corrected = cv2.cvtColor(corrected, cv2.COLOR_BGR2GRAY) if len(corrected.shape) == 3 else corrected
-        raw_text, confidence = self.ocr.extract_text(gray_corrected)
         
+        # Percobaan OCR Pertama (Posisi Normal)
+        raw_text, confidence = self.ocr.extract_text(gray_corrected)
         fields = self.parser.parse(raw_text)
+        rotation_angle = 0.0
+
+        # Fallback Cerdas: Jika kartu terbalik (email & phone N/A), putar 180 derajat
+        if fields["email"] == "N/A" and fields["phone"] == "N/A":
+            gray_rotated = cv2.rotate(gray_corrected, cv2.ROTATE_180)
+            raw_text_rot, conf_rot = self.ocr.extract_text(gray_rotated)
+            fields_rot = self.parser.parse(raw_text_rot)
+            
+            # Gunakan hasil rotasi jika berhasil menemukan kontak
+            if fields_rot["email"] != "N/A" or fields_rot["phone"] != "N/A":
+                fields = fields_rot
+                confidence = conf_rot
+                rotation_angle = 180.0
+                corrected = cv2.rotate(corrected, cv2.ROTATE_180)
+                enhanced = cv2.rotate(enhanced, cv2.ROTATE_180)
+
         proc_time = int((time.time() - start_time) * 1000)
         
         metadata = {
             "document_detected": True,
-            "rotation_angle": 0.0,
+            "rotation_angle": rotation_angle,
             "processing_time_ms": proc_time,
             "ocr_confidence": confidence,
             "image_width": w,
