@@ -32,6 +32,6 @@ RUN cmake -B build -DCMAKE_BUILD_TYPE=Release && \
 # SETTING ENV PENTING:
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
-ENV LD_LIBRARY_PATH=/app:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=/app
 
 CMD ["python", "app.py", "--input", "./dataset", "--output", "./outputs"]
