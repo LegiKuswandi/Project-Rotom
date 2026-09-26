@@ -2,8 +2,9 @@ import cv2
 import numpy as np
 
 class DocumentDetector:
-    def __init__(self, min_area_ratio=0.03): # Diturunkan ke 0.03 agar kartu yang tampak kecil/vertikal tetap terdeteksi
+    def __init__(self, min_area_ratio=0.03, max_area_ratio=0.85):
         self.min_area_ratio = min_area_ratio
+        self.max_area_ratio = max_area_ratio
 
     def detect(self, image: np.ndarray):
         h, w = image.shape[:2]
@@ -17,18 +18,13 @@ class DocumentDetector:
             clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
             gray = clahe.apply(gray)
 
-
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
         
-        # SOLUSI 1: Mengatasi Kontras Rendah
-        # Gabungkan Canny (dengan ambang sensitif) dan Otsu Thresholding 
-        # agar tepi kartu yang putih di atas meja terang tetap terisolasi
         canny = cv2.Canny(blurred, 30, 100)
-        _, thresh_otsu = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-        combined_edges = cv2.bitwise_or(canny, thresh_otsu)
         
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
-        closed = cv2.morphologyEx(combined_edges, cv2.MORPH_CLOSE, kernel, iterations=2)
+        # Langsung proses Canny dengan morphologyEx
+        closed = cv2.morphologyEx(canny, cv2.MORPH_CLOSE, kernel, iterations=2)
         
         contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         contours = sorted(contours, key=cv2.contourArea, reverse=True)
@@ -38,21 +34,22 @@ class DocumentDetector:
         
         for c in contours:
             area = cv2.contourArea(c)
+            
+            # Abaikan kontur terluar jika menutupi lebih dari 85% seluruh area foto
+            if area > (image_area * self.max_area_ratio):
+                continue
+
             if area < (image_area * self.min_area_ratio):
                 break
                 
             peri = cv2.arcLength(c, True)
-            # Sedikit dilonggarkan ke 0.03 agar batas tepi tidak terlalu kaku
             approx = cv2.approxPolyDP(c, 0.03 * peri, True)
             
-            # SOLUSI 2: Melonggarkan Aturan len(approx) == 4
             if len(approx) == 4:
                 doc_contour = c
                 corners = approx.reshape(4, 2)
                 break
             elif 4 < len(approx) <= 10:
-                # Fallback: Jika ada bayangan yang membuat sudut terbaca 5-10 titik, 
-                # paksa buat kotak area terkecil (Minimum Bounding Box) dari kontur tersebut
                 rect = cv2.minAreaRect(c)
                 box = cv2.boxPoints(rect)
                 doc_contour = c
