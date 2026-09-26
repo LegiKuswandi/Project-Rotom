@@ -1,0 +1,14 @@
+{
+  "document_detected": true,
+  "rotation_angle": 0.0,
+  "processing_time_ms": 501,
+  "ocr_confidence": 0.93,
+  "image_width": 1792,
+  "image_height": 852,
+  "fields": {
+    "name": "HARPER RUSSO",
+    "company": "PT Nusantara Tech",
+    "email": "saharper@gmail.com",
+    "phone": "1234567890"
+  }
+}
